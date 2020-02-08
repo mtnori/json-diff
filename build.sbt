@@ -21,3 +21,10 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser",
   "io.circe" %% "circe-shapes"
 ).map(_ % circeVersion)
+
+val potVersion = "4.1.1"
+
+libraryDependencies ++= Seq(
+  "org.apache.poi" % "poi",
+  "org.apache.poi" % "poi-ooxml"
+).map(_ % potVersion)

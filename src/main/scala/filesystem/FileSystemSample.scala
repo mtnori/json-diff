@@ -23,7 +23,7 @@ object FileSystemSample {
 
   /**
     * フォルダからZipファイルの中身のJsonの文字を返す
-    * TODO 最終的にList[string]で返すかも
+    * TODO 最終的にList[string]で返す。もしくはタプル
     */
   val getZipInnerJsonFilePaths: String => String => String =
     (baseDir: String) =>
@@ -50,6 +50,7 @@ object FileSystemSample {
   /**
     * ZipファイルのPathから、Zipファイル内の
     * Jsonファイルの内容を取得する
+    * TODO こっちで返し方かえるかも
     */
   val getJsonFilePaths: Path => String =
     (path: Path) => {
