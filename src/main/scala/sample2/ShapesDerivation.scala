@@ -2,6 +2,9 @@ package sample2
 
 import io.circe.{Decoder, Encoder}
 
+/**
+  * 抽象型に対するEncode/Decode設定
+  */
 object ShapesDerivation {
   type EventMap = Map[String, Event]
   case class NameWithEventMap(name: String, events: EventMap)

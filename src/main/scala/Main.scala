@@ -1,7 +1,3 @@
-import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.{Files, Path}
-import java.util.function.BiPredicate
-
 import filesystem.FileSystemSample
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.decode
@@ -53,22 +49,29 @@ object Main extends App {
 
   println("================Find Search================")
   // "D:\\temp\\in"
-  val getJsonfilePathsWithBaseDir =
+  // カリー化してあるので、argsで渡された基底パスを部分適用する
+  val getJsonFilePathsWithBaseDir =
     FileSystemSample.getZipInnerJsonFilePaths(args(0))
-  // New
-  val newJSONs = getJsonfilePathsWithBaseDir("new")
-  // Old
-  val oldJSONs = getJsonfilePathsWithBaseDir("old")
+  // New分を取得
+  val newJSONs = getJsonFilePathsWithBaseDir("new")
+  // Old分を取得
+  val oldJSONs = getJsonFilePathsWithBaseDir("old")
+  println("================Json Content================")
+  // いったん表示してみる
   println(newJSONs)
   println(oldJSONs)
 
-  // TODO Pathをどこかに控えておいて、Json取得時に使う
-
-  // TODO Jsonをまとめて一つの型へまとめる
+  println("================Parsed Json================")
+  // TODO Jsonをデコードして型で扱えるようにする
+  val parsedData = decode[NameWithEventMap](newJSONs)
+  println(parsedData)
 
   // TODO 同じtype同士でマッチさせて、追加要素で一致しているか確認。一致したら比較開始。
+  val data = parsedData.getOrElse(throw new Exception("parse failed"))
 
   // TODO 結果をPOIでExcelに書き出したい(出力先はarg(1)で渡す)
+
+//  BetterFiles.execute()
 
 //  sealed trait Event
 //

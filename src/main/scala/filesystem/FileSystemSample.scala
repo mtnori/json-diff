@@ -1,7 +1,10 @@
 package filesystem
 
+import java.io.{BufferedReader, IOException, UncheckedIOException}
+import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileSystem, FileSystems, Files, Path, Paths}
+import java.util.Scanner
 import java.util.function.BiPredicate
 
 import scala.collection.mutable.ArrayBuffer
@@ -19,9 +22,10 @@ object FileSystemSample {
   }
 
   /**
-    * フォルダからZipファイルのPathを取得する
+    * フォルダからZipファイルの中身のJsonの文字を返す
+    * TODO 最終的にList[string]で返すかも
     */
-  val getZipInnerJsonFilePaths: String => String => Seq[Path] =
+  val getZipInnerJsonFilePaths: String => String => String =
     (baseDir: String) =>
       (subDir: String) => {
         val path = Paths.get(baseDir).resolve(subDir)
@@ -29,9 +33,9 @@ object FileSystemSample {
         println(path.toAbsolutePath)
 
         val zipFiles = new ArrayBuffer[Path]
-        Files.find(path, 1, zipMatcher).forEach { x =>
+        Files.find(path, 1, zipMatcher).forEach { zipFile =>
           {
-            zipFiles += x
+            zipFiles += zipFile
           }
         }
 
@@ -45,20 +49,46 @@ object FileSystemSample {
 
   /**
     * ZipファイルのPathから、Zipファイル内の
-    * JsonファイルのPathリストを取得する
+    * Jsonファイルの内容を取得する
     */
-  val getJsonFilePaths: Path => Seq[Path] =
+  val getJsonFilePaths: Path => String =
     (path: Path) => {
       val fs =
         FileSystems.newFileSystem(path, null)
       val root = fs.getPath("/")
 
-      val jsonFiles = new ArrayBuffer[Path]
-      Files.find(root, 2, jsonMatcher).forEach { x =>
+      val sb = new StringBuilder
+      Files.find(root, 2, jsonMatcher).forEach { innerPath =>
         {
-          jsonFiles += x
+          sb.append(readJsonFile(innerPath))
         }
       }
-      jsonFiles.toSeq
+      sb.toString()
     }
+
+  // try-with-resourceの代替となるローンパターン
+  def using[R <: AutoCloseable, A](resource: R)(f: R => A): A =
+    try {
+      f(resource)
+    } finally {
+      resource.close()
+    }
+
+  // JSONファイルの読み込み
+  val readJsonFile: Path => String = (path: Path) => {
+    val sb = new StringBuilder
+    using(Files.newBufferedReader(path, StandardCharsets.UTF_8)) { in =>
+      {
+        using(new Scanner(in)) { sc =>
+          {
+            //sc.useDelimiter("(,|\\n)")
+            while (sc.hasNext()) {
+              sb.append(sc.next())
+            }
+            sb.toString()
+          }
+        }
+      }
+    }
+  }
 }
