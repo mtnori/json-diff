@@ -3,6 +3,9 @@ package sample2
 import io.circe.{Decoder, Encoder}
 
 object ShapesDerivation {
+  type EventMap = Map[String, Event]
+  case class NameWithEventMap(name: String, events: EventMap)
+
   import shapeless.{Coproduct, Generic}
 
   implicit def encodeAdtNoDiscr[A, Repr <: Coproduct](
