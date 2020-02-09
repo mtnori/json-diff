@@ -81,8 +81,11 @@ object Main extends App {
   // TODO 結果をPOIでExcelに書き出したい(出力先はarg(1)で渡す)
   println("================Apache POI================")
   Using.usingResource(ExcelHandler.load("format.xlsx", 0)) { excel =>
+    excel.createSheet("あいえうおかきくけこ")
+    excel.selectSheetByName("あいえうおかきくけこ")
     excel.writeCell("aaaaaaa", 0, 5)
     excel.writeCell(1.5, 10, 5)
+    excel.selectSheet(0)
     excel.writeCell(100, 10, 7)
     excel.writeCellByName("test_name", "TESTNAME")
     // excel.mergeCells(10, 5, 10, 2)

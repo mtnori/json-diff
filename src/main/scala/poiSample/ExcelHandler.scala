@@ -52,6 +52,14 @@ class ExcelHandler(private val workbook: Workbook, sheetIdx: Int = 0)
   }
 
   /**
+    * 新しいシートを作成する
+    * @param sheetName シート名
+    */
+  def createSheet(sheetName: String): Unit = {
+    this.workbook.createSheet(sheetName)
+  }
+
+  /**
     * 指定した行を返す。指定した行が存在しなければ作成して返す。
     * @param rowIdx 行番号(0~)
     * @return 行
