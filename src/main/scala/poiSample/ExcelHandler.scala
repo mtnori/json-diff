@@ -1,6 +1,5 @@
 package poiSample
 
-import scala.jdk.CollectionConverters._
 import java.nio.file.{Files, Path, Paths}
 import java.util.Date
 
@@ -14,6 +13,7 @@ import scala.util.control.Breaks
 
 sealed trait CellVal
 case class StringCellVal(value: String) extends CellVal
+case class IntCellVal(value: Int) extends CellVal
 case class DoubleCellVal(value: Double) extends CellVal
 case class BooleanCellVal(value: Boolean) extends CellVal
 case class DateCellVal(value: Date) extends CellVal
@@ -89,6 +89,7 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
     // セルの値を設定する
     cellValue match {
       case StringCellVal(value)  => cell.setCellValue(value)
+      case IntCellVal(value)     => cell.setCellValue(value.toDouble)
       case DoubleCellVal(value)  => cell.setCellValue(value)
       case BooleanCellVal(value) => cell.setCellValue(value)
       case DateCellVal(value)    => cell.setCellValue(value)
@@ -97,84 +98,9 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
     cell.setCellStyle(style)
   }
 
-//  /**
-//    * セルに値を設定する
-//    * @param value 値(String型)
-//    * @param rowIdx 行番号
-//    * @param colIdx 列番号
-//    * @param style セルスタイル
-//    */
-//  def writeCell(value: String,
-//                rowIdx: Int,
-//                colIdx: Int,
-//                style: CellStyle = defaultStyle): Unit = {
-//    // セルを取得する
-//    val cell: Cell = getCell(rowIdx, colIdx)
-//    // セルの値を設定する
-//    cell.setCellValue(value)
-//    // セルのスタイルを設定する
-//    cell.setCellStyle(style)
-//  }
-//
-//  /**
-//    * セルに値を設定する
-//    * @param value 値(Double型)
-//    * @param rowIdx 行番号
-//    * @param colIdx 列番号
-//    * @param style セルスタイル
-//    */
-//  def writeCell(value: Double,
-//                rowIdx: Int,
-//                colIdx: Int,
-//                style: CellStyle = defaultStyle): Unit = {
-//    // セルを取得する
-//    val cell: Cell = getCell(rowIdx, colIdx)
-//    // セルの値を設定する
-//    cell.setCellValue(value)
-//    // セルのスタイルを設定する
-//    cell.setCellStyle(style)
-//  }
-//
-//  /**
-//    * セルに値を設定する
-//    * @param value 値(Date型)
-//    * @param rowIdx 行番号
-//    * @param colIdx 列番号
-//    * @param style セルスタイル
-//    */
-//  def writeCell(value: Date,
-//                rowIdx: Int,
-//                colIdx: Int,
-//                style: CellStyle = defaultStyle): Unit = {
-//    // セルを取得する
-//    val cell: Cell = getCell(rowIdx, colIdx)
-//    // セルの値を設定する
-//    cell.setCellValue(value)
-//    // セルのスタイルを設定する
-//    cell.setCellStyle(style)
-//  }
-//
-//  /**
-//    * セルに値を設定する
-//    * @param value 値(Boolean型)
-//    * @param rowIdx 行番号
-//    * @param colIdx 列番号
-//    * @param style セルスタイル
-//    */
-//  def writeCell(value: Boolean,
-//                rowIdx: Int,
-//                colIdx: Int,
-//                style: CellStyle = defaultStyle): Unit = {
-//    // セルを取得する
-//    val cell: Cell = getCell(rowIdx, colIdx)
-//    // セルの値を設定する
-//    cell.setCellValue(value)
-//    // セルのスタイルを設定する
-//    cell.setCellStyle(style)
-//  }
-
   /**
     * 名前定義からセルを探して値をセットする
+    * 指定した名前のセルが見つからなければ何もしない
     * @param cellValue セル値
     * @param name セルの名前定義
     * @param style セルスタイル
@@ -189,102 +115,38 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
     }
   }
 
-//  /**
-//    * 名前定義からセルを探して値をセットする
-//    * @param value 値(String型)
-//    * @param name セルの名前定義
-//    * @param style セルスタイル
-//    */
-//  def writeCellByName(value: String,
-//                      name: String,
-//                      style: CellStyle = defaultStyle): Unit = {
-//    val lName = this.workbook.getName(name)
-//    if (lName != null) {
-//      val ref = new CellReference(lName.getRefersToFormula)
-//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
-//    }
-//  }
-//
-//  /**
-//    * 名前定義からセルを探して値をセットする
-//    * @param value 値(Double型)
-//    * @param name セルの名前定義
-//    * @param style セルスタイル
-//    */
-//  def writeCellByName(value: Double,
-//                      name: String,
-//                      style: CellStyle = defaultStyle): Unit = {
-//    val lName = this.workbook.getName(name)
-//    if (lName != null) {
-//      val ref = new CellReference(lName.getRefersToFormula)
-//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
-//    }
-//  }
-//
-//  /**
-//    * 名前定義からセルを探して値をセットする
-//    * @param value 値(Date型)
-//    * @param name セルの名前定義
-//    * @param style セルスタイル
-//    */
-//  def writeCellByName(value: Date,
-//                      name: String,
-//                      style: CellStyle = defaultStyle): Unit = {
-//    val lName = this.workbook.getName(name)
-//    if (lName != null) {
-//      val ref = new CellReference(lName.getRefersToFormula)
-//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
-//    }
-//  }
-//
-//  /**
-//    * 名前定義からセルを探して値をセットする
-//    * @param value 値(Boolean型)
-//    * @param name セルの名前定義
-//    * @param style セルスタイル
-//    */
-//  def writeCellByName(value: Boolean,
-//                      name: String,
-//                      style: CellStyle = defaultStyle): Unit = {
-//    val lName = this.workbook.getName(name)
-//    if (lName != null) {
-//      val ref = new CellReference(lName.getRefersToFormula)
-//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
-//    }
-//  }
-
   /**
     * セルに計算式を設定する
-    * @param value 計算式
+    * @param formula 計算式
     * @param rowIdx 行番号
     * @param colIdx 列番号
     * @param style セルスタイル
     */
-  def writeCellFormula(value: String,
+  def writeCellFormula(formula: String,
                        rowIdx: Int,
                        colIdx: Int,
                        style: CellStyle = defaultStyle): Unit = {
     // セルを取得する
     val cell: Cell = getCell(rowIdx, colIdx)
     // セルの値を設定する
-    cell.setCellFormula(value)
+    cell.setCellFormula(formula)
     // セルのスタイルを設定する
     cell.setCellStyle(style)
   }
 
   /**
     * 名前定義からセルを探して計算式をセットする
-    * @param value 計算式
+    * @param formula 計算式
     * @param name セルの名前定義
     * @param style セルスタイル
     */
-  def writeCellFormulaByName(value: CellVal,
+  def writeCellFormulaByName(formula: String,
                              name: String,
                              style: CellStyle = defaultStyle): Unit = {
     val lName = this.workbook.getName(name)
     if (lName != null) {
       val ref = new CellReference(lName.getRefersToFormula)
-      writeCell(value, ref.getRow, ref.getCol.toInt, style)
+      writeCellFormula(formula, ref.getRow, ref.getCol.toInt, style)
     }
   }
 
@@ -311,7 +173,7 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
 
   /**
     * セルの結合を解除する
-    * TODO 処理が遅いので、mergeCells関数内に組み込まない
+    * TODO 結合解除は処理が重いので、mergeCells関数内に組み込まない方が良い
     * @param startRowIdx 開始行
     * @param mergeRowNum 行結合数
     * @param startColIdx 開始列
@@ -321,6 +183,8 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
                    mergeRowNum: Int,
                    startColIdx: Int,
                    mergeColNum: Int): Unit = {
+
+    import scala.jdk.CollectionConverters._
     val targetRange = new CellRangeAddress(
       startRowIdx,
       startRowIdx + mergeRowNum - 1,
@@ -434,7 +298,7 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
     // 追加した行にスタイルを設定
     val newRow = getRow(startRowIdx + 1)
     for (colIdx <- 0 until originalRow.getLastCellNum) {
-      val originalCell = originalRow.getCell(colIdx)
+      val originalCell = getCell(startRowIdx, colIdx)
       val newCell = newRow.createCell(colIdx)
 
       // セルのスタイルをコピー
@@ -442,7 +306,7 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
       newCellStyle.cloneStyleFrom(originalCell.getCellStyle)
       newCell.setCellStyle(newCellStyle)
 
-      // FIXME Deprecated
+      // FIXME Deprecated POI 5.0で廃止予定
       // セルタイプのコピー
       // newCell.setCellType(originalCell.getCellType)
 
@@ -495,10 +359,14 @@ case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
 
 object ExcelHandler {
 
+  // 暗黙の型変換で、各型をCellValue型として扱うことで、オーバーロードメソッドを減らす
+  import scala.language.implicitConversions
   implicit def StringToCellValue(value: String): StringCellVal =
     StringCellVal(value)
   implicit def DoubleToCellValue(value: Double): DoubleCellVal =
     DoubleCellVal(value)
+  implicit def IntToCellValue(value: Int): IntCellVal =
+    IntCellVal(value)
   implicit def BooleanToCellValue(value: Boolean): BooleanCellVal =
     BooleanCellVal(value)
   implicit def DateToCellValue(value: Date): DateCellVal =
@@ -506,7 +374,8 @@ object ExcelHandler {
 
   /**
     * 雛形ファイルを読み込む
-    * @param format 雛形パス
+    * resources/formats下のファイルを指定することができる
+    * @param format 雛形ファイル名
     * @param sheetIdx シート番号
     * @return Excelデータ
     */

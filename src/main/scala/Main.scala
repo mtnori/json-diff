@@ -9,6 +9,7 @@ import poiSample.ExcelHandler.{
   BooleanToCellValue,
   StringToCellValue,
   DateToCellValue,
+  IntToCellValue,
   DoubleToCellValue
 }
 import sample2.{Bar, Event, Foo}
@@ -81,7 +82,13 @@ object Main extends App {
   println("================Apache POI================")
   Using.usingResource(ExcelHandler.load("format.xlsx", 0)) { excel =>
     excel.writeCell("aaaaaaa", 0, 5)
-    excel.writeCell("xxxxxxx", 10, 5)
+    excel.writeCell(1.5, 10, 5)
+    excel.writeCell(100, 10, 7)
+    excel.writeCellByName("test_name", "TESTNAME")
+    // excel.mergeCells(10, 5, 10, 2)
+    // excel.writeCell("MergedCell", 10, 10)
+    excel.insertRow(0)
+    // println(excel.getCellValue(10, 10)) // 結合セルの取得
     ExcelHandler.save(excel, args(1), "save.xlsx")
   }
 //  BetterFiles.execute()

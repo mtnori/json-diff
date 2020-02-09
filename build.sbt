@@ -28,3 +28,9 @@ libraryDependencies ++= Seq(
   "org.apache.poi" % "poi",
   "org.apache.poi" % "poi-ooxml"
 ).map(_ % potVersion)
+
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-unchecked"
+)
