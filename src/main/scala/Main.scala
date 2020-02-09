@@ -4,7 +4,15 @@ import io.circe.parser.decode
 import io.circe.syntax._
 import io.circe.generic.auto._
 import io.circe.shapes._
+import poiSample.ExcelHandler
+import poiSample.ExcelHandler.{
+  BooleanToCellValue,
+  StringToCellValue,
+  DateToCellValue,
+  DoubleToCellValue
+}
 import sample2.{Bar, Event, Foo}
+import utils.Using
 
 object Main extends App {
 //  val foo: Foo = Qux(13, Some(14.0))
@@ -70,7 +78,12 @@ object Main extends App {
   val data = parsedData.getOrElse(throw new Exception("parse failed"))
 
   // TODO 結果をPOIでExcelに書き出したい(出力先はarg(1)で渡す)
-
+  println("================Apache POI================")
+  Using.usingResource(ExcelHandler.load("format.xlsx", 0)) { excel =>
+    excel.writeCell("aaaaaaa", 0, 5)
+    excel.writeCell("xxxxxxx", 10, 5)
+    ExcelHandler.save(excel, args(1), "save.xlsx")
+  }
 //  BetterFiles.execute()
 
 //  sealed trait Event

@@ -1,35 +1,54 @@
 package poiSample
 
 import scala.jdk.CollectionConverters._
-import java.io.OutputStream
+import java.nio.file.{Files, Path, Paths}
 import java.util.Date
 
 import org.apache.poi.ss.usermodel._
 import org.apache.poi.ss.util.{CellRangeAddress, CellReference}
+import utils.Resource
+import utils.Using._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks
 
-/**
-  * Excel操作
-  * @param workbook ワークブック
-  * @param sheetIndex シート番号
-  */
-case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
-  var sheet: Sheet = workbook.getSheetAt(sheetIndex)
-  var defaultStyle: CellStyle = workbook.createCellStyle()
+sealed trait CellVal
+case class StringCellVal(value: String) extends CellVal
+case class DoubleCellVal(value: Double) extends CellVal
+case class BooleanCellVal(value: Boolean) extends CellVal
+case class DateCellVal(value: Date) extends CellVal
 
+/**
+  * Excel操作クラス
+  * @param workbook ワークブック
+  * @param sheetIdx 操作対象シート番号
+  */
+case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
+    extends Resource {
+
+  var selectedSheet: Sheet = workbook.getSheetAt(sheetIdx)
+
+  // デフォルトスタイルを定義
+  val defaultStyle: CellStyle = workbook.createCellStyle()
   val font: Font = workbook.createFont()
-  font.setFontHeight(11)
-  font.setFontName("ＭＳ Ｐゴシック")
+  font.setFontHeightInPoints(11)
+  font.setFontName("Yu Gothic")
   defaultStyle.setFont(font)
 
   /**
-    * ワークブックを保存する
-    * @param outputStream 出力ストリーム
+    * シート番号から操作対象となるシートを選択する
+    * @param sheetIdx シート番号(0~)
     */
-  def save(outputStream: OutputStream): Unit = {
-    this.workbook.write(outputStream)
+  def selectSheet(sheetIdx: Int): Unit = {
+    this.selectedSheet = workbook.getSheetAt(sheetIdx)
+  }
+
+  /**
+    * シート名から操作対象となるシートを選択する
+    * @param sheetName シート名
+    */
+  def selectSheetByName(sheetName: String): Unit = {
+    this.selectedSheet = workbook.getSheet(sheetName)
   }
 
   /**
@@ -38,8 +57,8 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
     * @return 行
     */
   private def getRow(rowIdx: Int): Row = {
-    val row = this.sheet.getRow(rowIdx)
-    if (row != null) row else this.sheet.createRow(rowIdx)
+    val row = this.selectedSheet.getRow(rowIdx)
+    if (row != null) row else this.selectedSheet.createRow(rowIdx)
   }
 
   /**
@@ -56,143 +75,183 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
 
   /**
     * セルに値を設定する
-    * @param value 値(String型)
+    * @param cellValue セル値
     * @param rowIdx 行番号
     * @param colIdx 列番号
     * @param style セルスタイル
     */
-  def writeCell(value: String,
+  def writeCell(cellValue: CellVal,
                 rowIdx: Int,
                 colIdx: Int,
                 style: CellStyle = defaultStyle): Unit = {
     // セルを取得する
     val cell: Cell = getCell(rowIdx, colIdx)
     // セルの値を設定する
-    cell.setCellValue(value)
+    cellValue match {
+      case StringCellVal(value)  => cell.setCellValue(value)
+      case DoubleCellVal(value)  => cell.setCellValue(value)
+      case BooleanCellVal(value) => cell.setCellValue(value)
+      case DateCellVal(value)    => cell.setCellValue(value)
+    }
     // セルのスタイルを設定する
     cell.setCellStyle(style)
   }
 
-  /**
-    * セルに値を設定する
-    * @param value 値(Double型)
-    * @param rowIdx 行番号
-    * @param colIdx 列番号
-    * @param style セルスタイル
-    */
-  def writeCell(value: Double,
-                rowIdx: Int,
-                colIdx: Int,
-                style: CellStyle = defaultStyle): Unit = {
-    // セルを取得する
-    val cell: Cell = getCell(rowIdx, colIdx)
-    // セルの値を設定する
-    cell.setCellValue(value)
-    // セルのスタイルを設定する
-    cell.setCellStyle(style)
-  }
-
-  /**
-    * セルに値を設定する
-    * @param value 値(Date型)
-    * @param rowIdx 行番号
-    * @param colIdx 列番号
-    * @param style セルスタイル
-    */
-  def writeCell(value: Date,
-                rowIdx: Int,
-                colIdx: Int,
-                style: CellStyle = defaultStyle): Unit = {
-    // セルを取得する
-    val cell: Cell = getCell(rowIdx, colIdx)
-    // セルの値を設定する
-    cell.setCellValue(value)
-    // セルのスタイルを設定する
-    cell.setCellStyle(style)
-  }
-
-  /**
-    * セルに値を設定する
-    * @param value 値(Boolean型)
-    * @param rowIdx 行番号
-    * @param colIdx 列番号
-    * @param style セルスタイル
-    */
-  def writeCell(value: Boolean,
-                rowIdx: Int,
-                colIdx: Int,
-                style: CellStyle = defaultStyle): Unit = {
-    // セルを取得する
-    val cell: Cell = getCell(rowIdx, colIdx)
-    // セルの値を設定する
-    cell.setCellValue(value)
-    // セルのスタイルを設定する
-    cell.setCellStyle(style)
-  }
+//  /**
+//    * セルに値を設定する
+//    * @param value 値(String型)
+//    * @param rowIdx 行番号
+//    * @param colIdx 列番号
+//    * @param style セルスタイル
+//    */
+//  def writeCell(value: String,
+//                rowIdx: Int,
+//                colIdx: Int,
+//                style: CellStyle = defaultStyle): Unit = {
+//    // セルを取得する
+//    val cell: Cell = getCell(rowIdx, colIdx)
+//    // セルの値を設定する
+//    cell.setCellValue(value)
+//    // セルのスタイルを設定する
+//    cell.setCellStyle(style)
+//  }
+//
+//  /**
+//    * セルに値を設定する
+//    * @param value 値(Double型)
+//    * @param rowIdx 行番号
+//    * @param colIdx 列番号
+//    * @param style セルスタイル
+//    */
+//  def writeCell(value: Double,
+//                rowIdx: Int,
+//                colIdx: Int,
+//                style: CellStyle = defaultStyle): Unit = {
+//    // セルを取得する
+//    val cell: Cell = getCell(rowIdx, colIdx)
+//    // セルの値を設定する
+//    cell.setCellValue(value)
+//    // セルのスタイルを設定する
+//    cell.setCellStyle(style)
+//  }
+//
+//  /**
+//    * セルに値を設定する
+//    * @param value 値(Date型)
+//    * @param rowIdx 行番号
+//    * @param colIdx 列番号
+//    * @param style セルスタイル
+//    */
+//  def writeCell(value: Date,
+//                rowIdx: Int,
+//                colIdx: Int,
+//                style: CellStyle = defaultStyle): Unit = {
+//    // セルを取得する
+//    val cell: Cell = getCell(rowIdx, colIdx)
+//    // セルの値を設定する
+//    cell.setCellValue(value)
+//    // セルのスタイルを設定する
+//    cell.setCellStyle(style)
+//  }
+//
+//  /**
+//    * セルに値を設定する
+//    * @param value 値(Boolean型)
+//    * @param rowIdx 行番号
+//    * @param colIdx 列番号
+//    * @param style セルスタイル
+//    */
+//  def writeCell(value: Boolean,
+//                rowIdx: Int,
+//                colIdx: Int,
+//                style: CellStyle = defaultStyle): Unit = {
+//    // セルを取得する
+//    val cell: Cell = getCell(rowIdx, colIdx)
+//    // セルの値を設定する
+//    cell.setCellValue(value)
+//    // セルのスタイルを設定する
+//    cell.setCellStyle(style)
+//  }
 
   /**
     * 名前定義からセルを探して値をセットする
-    * @param value 値(String型)
+    * @param cellValue セル値
     * @param name セルの名前定義
     * @param style セルスタイル
     */
-  def writeCellByName(value: String,
+  def writeCellByName(cellValue: CellVal,
                       name: String,
                       style: CellStyle = defaultStyle): Unit = {
     val lName = this.workbook.getName(name)
     if (lName != null) {
       val ref = new CellReference(lName.getRefersToFormula)
-      writeCell(value, ref.getRow, ref.getCol.toInt, style)
+      writeCell(cellValue, ref.getRow, ref.getCol.toInt, style)
     }
   }
 
-  /**
-    * 名前定義からセルを探して値をセットする
-    * @param value 値(Double型)
-    * @param name セルの名前定義
-    * @param style セルスタイル
-    */
-  def writeCellByName(value: Double,
-                      name: String,
-                      style: CellStyle = defaultStyle): Unit = {
-    val lName = this.workbook.getName(name)
-    if (lName != null) {
-      val ref = new CellReference(lName.getRefersToFormula)
-      writeCell(value, ref.getRow, ref.getCol.toInt, style)
-    }
-  }
-
-  /**
-    * 名前定義からセルを探して値をセットする
-    * @param value 値(Date型)
-    * @param name セルの名前定義
-    * @param style セルスタイル
-    */
-  def writeCellByName(value: Date,
-                      name: String,
-                      style: CellStyle = defaultStyle): Unit = {
-    val lName = this.workbook.getName(name)
-    if (lName != null) {
-      val ref = new CellReference(lName.getRefersToFormula)
-      writeCell(value, ref.getRow, ref.getCol.toInt, style)
-    }
-  }
-
-  /**
-    * 名前定義からセルを探して値をセットする
-    * @param value 値(Boolean型)
-    * @param name セルの名前定義
-    * @param style セルスタイル
-    */
-  def writeCellByName(value: Boolean,
-                      name: String,
-                      style: CellStyle = defaultStyle): Unit = {
-    val lName = this.workbook.getName(name)
-    if (lName != null) {
-      val ref = new CellReference(lName.getRefersToFormula)
-      writeCell(value, ref.getRow, ref.getCol.toInt, style)
-    }
-  }
+//  /**
+//    * 名前定義からセルを探して値をセットする
+//    * @param value 値(String型)
+//    * @param name セルの名前定義
+//    * @param style セルスタイル
+//    */
+//  def writeCellByName(value: String,
+//                      name: String,
+//                      style: CellStyle = defaultStyle): Unit = {
+//    val lName = this.workbook.getName(name)
+//    if (lName != null) {
+//      val ref = new CellReference(lName.getRefersToFormula)
+//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
+//    }
+//  }
+//
+//  /**
+//    * 名前定義からセルを探して値をセットする
+//    * @param value 値(Double型)
+//    * @param name セルの名前定義
+//    * @param style セルスタイル
+//    */
+//  def writeCellByName(value: Double,
+//                      name: String,
+//                      style: CellStyle = defaultStyle): Unit = {
+//    val lName = this.workbook.getName(name)
+//    if (lName != null) {
+//      val ref = new CellReference(lName.getRefersToFormula)
+//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
+//    }
+//  }
+//
+//  /**
+//    * 名前定義からセルを探して値をセットする
+//    * @param value 値(Date型)
+//    * @param name セルの名前定義
+//    * @param style セルスタイル
+//    */
+//  def writeCellByName(value: Date,
+//                      name: String,
+//                      style: CellStyle = defaultStyle): Unit = {
+//    val lName = this.workbook.getName(name)
+//    if (lName != null) {
+//      val ref = new CellReference(lName.getRefersToFormula)
+//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
+//    }
+//  }
+//
+//  /**
+//    * 名前定義からセルを探して値をセットする
+//    * @param value 値(Boolean型)
+//    * @param name セルの名前定義
+//    * @param style セルスタイル
+//    */
+//  def writeCellByName(value: Boolean,
+//                      name: String,
+//                      style: CellStyle = defaultStyle): Unit = {
+//    val lName = this.workbook.getName(name)
+//    if (lName != null) {
+//      val ref = new CellReference(lName.getRefersToFormula)
+//      writeCell(value, ref.getRow, ref.getCol.toInt, style)
+//    }
+//  }
 
   /**
     * セルに計算式を設定する
@@ -219,7 +278,7 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
     * @param name セルの名前定義
     * @param style セルスタイル
     */
-  def writeCellFormulaByName(value: Boolean,
+  def writeCellFormulaByName(value: CellVal,
                              name: String,
                              style: CellStyle = defaultStyle): Unit = {
     val lName = this.workbook.getName(name)
@@ -240,7 +299,7 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
                  mergeRowNum: Int,
                  startColIdx: Int,
                  mergeColNum: Int): Int = {
-    this.sheet.addMergedRegion(
+    this.selectedSheet.addMergedRegion(
       new CellRangeAddress(
         startRowIdx,
         startRowIdx + mergeRowNum - 1,
@@ -269,7 +328,7 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
       startColIdx + mergeColNum - 1
     )
     val mergeList: Seq[CellRangeAddress] =
-      this.sheet.getMergedRegions.asScala.toSeq
+      this.selectedSheet.getMergedRegions.asScala.toSeq
     val removeIndices: ArrayBuffer[Int] = new ArrayBuffer[Int]()
     for ((mergedAddress, mergeIndex) <- mergeList.zipWithIndex) {
       if (targetRange.intersects(mergedAddress)) {
@@ -278,7 +337,7 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
     }
     // 手前から解除するとインデックスが合わなくなるので後ろから消す
     for (removeIndex <- removeIndices.reverse) {
-      this.sheet.removeMergedRegion(removeIndex)
+      this.selectedSheet.removeMergedRegion(removeIndex)
     }
   }
 
@@ -316,12 +375,12 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
   private def getStringRangeValue(cell: Cell): String = {
     val rowIdx = cell.getRowIndex
     val colIdx = cell.getColumnIndex
-    val size: Int = sheet.getNumMergedRegions
+    val size: Int = selectedSheet.getNumMergedRegions
     val b = new Breaks
     var result = ""
     b.breakable {
       for (i <- 0 to size) {
-        val range: CellRangeAddress = sheet.getMergedRegion(i)
+        val range: CellRangeAddress = selectedSheet.getMergedRegion(i)
         if (range.isInRange(rowIdx, colIdx)) {
           result = getCellValue(range.getFirstRow, range.getFirstColumn)
           b.break
@@ -366,11 +425,11 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
     val originalRow = getRow(startRowIdx)
 
     // シート末尾に新しい行を追加
-    val lastRowNum = this.sheet.getLastRowNum
-    this.sheet.createRow(lastRowNum + 1)
+    val lastRowNum = this.selectedSheet.getLastRowNum
+    this.selectedSheet.createRow(lastRowNum + 1)
 
     // 行を追加する位置以降の行を下にずらす
-    this.sheet.shiftRows(startRowIdx + 1, lastRowNum, 1)
+    this.selectedSheet.shiftRows(startRowIdx + 1, lastRowNum, 1)
 
     // 追加した行にスタイルを設定
     val newRow = getRow(startRowIdx + 1)
@@ -388,17 +447,17 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
       // newCell.setCellType(originalCell.getCellType)
 
       // 追加した行にマージ状態を設定
-      if (this.sheet.getNumMergedRegions > 0) {
+      if (this.selectedSheet.getNumMergedRegions > 0) {
 
         val b = new Breaks
         b.breakable {
-          for (index <- 0 until this.sheet.getNumMergedRegions) {
-            val cellRangeAddress = this.sheet.getMergedRegion(index)
+          for (index <- 0 until this.selectedSheet.getNumMergedRegions) {
+            val cellRangeAddress = this.selectedSheet.getMergedRegion(index)
             // コピー元セル(結合済み)の左上セルがmergedRegionと一致すれば、
             // 新しいセルに対してmergeRegionを追加する
             if (cellRangeAddress.getFirstRow == originalCell.getRowIndex
                 && cellRangeAddress.getFirstRow == originalCell.getColumnIndex) {
-              this.sheet.addMergedRegion(
+              this.selectedSheet.addMergedRegion(
                 new CellRangeAddress(
                   newRow.getRowNum,
                   newRow.getRowNum + (cellRangeAddress.getLastRow - cellRangeAddress.getFirstRow),
@@ -421,6 +480,63 @@ case class ExcelHandler(workbook: Workbook, sheetIndex: Int = 0) {
     */
   def setRowHeight(rowIdx: Int, n: Int): Unit = {
     val row = getRow(rowIdx)
-    row.setHeightInPoints(n * sheet.getDefaultRowHeightInPoints)
+    row.setHeightInPoints(n * selectedSheet.getDefaultRowHeightInPoints)
+  }
+
+  /**
+    * ワークブックを開放する
+    */
+  def close(): Unit = {
+    if (this.workbook != null) {
+      this.workbook.close()
+    }
+  }
+}
+
+object ExcelHandler {
+
+  implicit def StringToCellValue(value: String): StringCellVal =
+    StringCellVal(value)
+  implicit def DoubleToCellValue(value: Double): DoubleCellVal =
+    DoubleCellVal(value)
+  implicit def BooleanToCellValue(value: Boolean): BooleanCellVal =
+    BooleanCellVal(value)
+  implicit def DateToCellValue(value: Date): DateCellVal =
+    DateCellVal(value)
+
+  /**
+    * 雛形ファイルを読み込む
+    * @param format 雛形パス
+    * @param sheetIdx シート番号
+    * @return Excelデータ
+    */
+  def load(format: String, sheetIdx: Int): ExcelHandler = {
+    usingAutoCloseable(
+      getClass.getClassLoader.getResourceAsStream(s"formats/$format")
+    ) { inputStream =>
+      {
+        ExcelHandler(WorkbookFactory.create(inputStream), sheetIdx)
+      }
+    }
+  }
+
+  /**
+    * ファイルを保存する
+    * @param excelHandler Excelデータ
+    * @param outputDir 出力先フォルダ
+    * @param fileName ファイル名
+    * @return 作成したファイルのパス
+    */
+  def save(excelHandler: ExcelHandler,
+           outputDir: String,
+           fileName: String): Path = {
+    val outputPath = Paths.get(outputDir).resolve(fileName)
+    usingAutoCloseable(Files.newOutputStream(outputPath)) { outputStream =>
+      {
+        excelHandler.workbook.write(outputStream)
+        outputStream.flush()
+        outputPath
+      }
+    }
   }
 }
