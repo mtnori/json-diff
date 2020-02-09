@@ -23,8 +23,7 @@ case class DateCellVal(value: Date) extends CellVal
   * @param workbook ワークブック
   * @param sheetIdx 操作対象シート番号
   */
-case class ExcelHandler(workbook: Workbook, sheetIdx: Int = 0)
-    extends Resource {
+class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
 
   var selectedSheet: Sheet = workbook.getSheetAt(sheetIdx)
 
@@ -384,7 +383,7 @@ object ExcelHandler {
       getClass.getClassLoader.getResourceAsStream(s"formats/$format")
     ) { inputStream =>
       {
-        ExcelHandler(WorkbookFactory.create(inputStream), sheetIdx)
+        new ExcelHandler(WorkbookFactory.create(inputStream))
       }
     }
   }
