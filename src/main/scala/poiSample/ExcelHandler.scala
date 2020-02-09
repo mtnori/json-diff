@@ -23,13 +23,14 @@ case class DateCellVal(value: Date) extends CellVal
   * @param workbook ワークブック
   * @param sheetIdx 操作対象シート番号
   */
-class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
+class ExcelHandler(private val workbook: Workbook, sheetIdx: Int = 0)
+    extends Resource {
 
-  var selectedSheet: Sheet = workbook.getSheetAt(sheetIdx)
+  private var selectedSheet: Sheet = workbook.getSheetAt(sheetIdx)
 
   // デフォルトスタイルを定義
-  val defaultStyle: CellStyle = workbook.createCellStyle()
-  val font: Font = workbook.createFont()
+  private val defaultStyle: CellStyle = workbook.createCellStyle()
+  private val font: Font = workbook.createFont()
   font.setFontHeightInPoints(11)
   font.setFontName("Yu Gothic")
   defaultStyle.setFont(font)
@@ -52,7 +53,7 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
 
   /**
     * 指定した行を返す。指定した行が存在しなければ作成して返す。
-    * @param rowIdx 行番号
+    * @param rowIdx 行番号(0~)
     * @return 行
     */
   private def getRow(rowIdx: Int): Row = {
@@ -62,8 +63,8 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
 
   /**
     * 指定したセルを返す。指定したセルが存在しなければ作成して返す。
-    * @param rowIdx 行番号
-    * @param colIdx 列番号
+    * @param rowIdx 行番号(0~)
+    * @param colIdx 列番号(0~)
     * @return セル
     */
   private def getCell(rowIdx: Int, colIdx: Int): Cell = {
@@ -75,8 +76,8 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
   /**
     * セルに値を設定する
     * @param cellValue セル値
-    * @param rowIdx 行番号
-    * @param colIdx 列番号
+    * @param rowIdx 行番号(0~)
+    * @param colIdx 列番号(0~)
     * @param style セルスタイル
     */
   def writeCell(cellValue: CellVal,
@@ -117,8 +118,8 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
   /**
     * セルに計算式を設定する
     * @param formula 計算式
-    * @param rowIdx 行番号
-    * @param colIdx 列番号
+    * @param rowIdx 行番号(0~)
+    * @param colIdx 列番号(0~)
     * @param style セルスタイル
     */
   def writeCellFormula(formula: String,
@@ -151,9 +152,9 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
 
   /**
     * セルを結合する
-    * @param startRowIdx 開始行
+    * @param startRowIdx 開始行(0~)
     * @param mergeRowNum 行結合数
-    * @param startColIdx 開始列
+    * @param startColIdx 開始列(0~)
     * @param mergeColNum 列結合数
     */
   def mergeCells(startRowIdx: Int,
@@ -173,9 +174,9 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
   /**
     * セルの結合を解除する
     * TODO 結合解除は処理が重いので、mergeCells関数内に組み込まない方が良い
-    * @param startRowIdx 開始行
+    * @param startRowIdx 開始行(0~)
     * @param mergeRowNum 行結合数
-    * @param startColIdx 開始列
+    * @param startColIdx 開始列(0~)
     * @param mergeColNum 列結合数
     */
   def unMergeCells(startRowIdx: Int,
@@ -207,7 +208,7 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
   /**
     * セルの計算式の計算結果を取得する
     * @param cell セル
-    * @return セルの計算式の計算結果(文字列
+    * @return セルの計算式の計算結果(文字列)
     */
   private def getStringFormulaValue(cell: Cell): String = {
     val helper: CreationHelper = this.workbook.getCreationHelper
@@ -255,8 +256,8 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
 
   /**
     * セルの値を文字列で返す
-    * @param rowIdx 行番号
-    * @param colIdx 列番号
+    * @param rowIdx 行番号(0~)
+    * @param colIdx 列番号(0~)
     * @return セルの値(文字列)
     */
   def getCellValue(rowIdx: Int, colIdx: Int): String = {
@@ -281,7 +282,7 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
   /**
     * 行を挿入する
     * その際、スタイルとセル結合情報を開始行からコピーする
-    * @param startRowIdx 開始行
+    * @param startRowIdx 開始行(0~)
     */
   def insertRow(startRowIdx: Int): Unit = {
     // コピー元の行を取得
@@ -338,7 +339,7 @@ class ExcelHandler(val workbook: Workbook, sheetIdx: Int = 0) extends Resource {
 
   /**
     * 指定した行の高さを設定する
-    * @param rowIdx 行番号
+    * @param rowIdx 行番号(0~)
     * @param n デフォルトの高さの何倍に設定するか
     */
   def setRowHeight(rowIdx: Int, n: Int): Unit = {
@@ -375,7 +376,7 @@ object ExcelHandler {
     * 雛形ファイルを読み込む
     * resources/formats下のファイルを指定することができる
     * @param format 雛形ファイル名
-    * @param sheetIdx シート番号
+    * @param sheetIdx シート番号(0~)
     * @return Excelデータ
     */
   def load(format: String, sheetIdx: Int): ExcelHandler = {
