@@ -6,15 +6,20 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileSystem, FileSystems, Files, Path, Paths}
 import java.util.Scanner
 import java.util.function.BiPredicate
+import java.util.stream.Collectors
 
 import scala.collection.mutable.ArrayBuffer
 
 object FileSystemSample {
 
-  val zipMatcher: BiPredicate[Path, BasicFileAttributes] = (path, attr) => {
-    if (attr.isRegularFile && path.getFileName.toString.endsWith(".zip")) true
-    else false
-  }
+  val zipMatcher: String => BiPredicate[Path, BasicFileAttributes] =
+    (fileName: String) =>
+      (path: Path, attr: BasicFileAttributes) => {
+        if (attr.isRegularFile && path.getFileName.toString.endsWith(
+              s"$fileName.zip"
+            )) true
+        else false
+    }
 
   val jsonMatcher: BiPredicate[Path, BasicFileAttributes] = (path, attr) => {
     if (attr.isRegularFile && path.getFileName.toString.endsWith(".txt")) true
@@ -25,15 +30,14 @@ object FileSystemSample {
     * フォルダからZipファイルの中身のJsonの文字を返す
     * TODO 最終的にList[string]で返す。もしくはタプル
     */
-  val getZipInnerJsonFilePaths: String => String => String =
+  val getZipInnerJsonFilePaths: String => Path => String =
     (baseDir: String) =>
-      (subDir: String) => {
+      (subDir: Path) => {
+
         val path = Paths.get(baseDir).resolve(subDir)
 
-        println(path.toAbsolutePath)
-
         val zipFiles = new ArrayBuffer[Path]
-        Files.find(path, 1, zipMatcher).forEach { zipFile =>
+        Files.find(path, 1, zipMatcher("new")).forEach { zipFile =>
           {
             zipFiles += zipFile
           }
